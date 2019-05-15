@@ -152,11 +152,6 @@ fn run_lldb(device: Option<Arc<Box<Device>>>) -> Result<()> {
     }
 }
 
-fn show_all_devices(dinghy: &Dinghy) -> Result<()> {
-    println!("List of available devices for all platforms:");
-    show_devices(&dinghy, None)
-}
-
 fn show_all_platforms(dinghy: &Dinghy) -> Result<()> {
     let mut platforms = dinghy.platforms();
     platforms.sort_by(|str1, str2| str1.id().cmp(&str2.id()));
@@ -164,6 +159,11 @@ fn show_all_platforms(dinghy: &Dinghy) -> Result<()> {
         println!("* {} {}", pf.id(), pf.rustc_triple().map(|s| format!("({})", s)).unwrap_or("".to_string()));
     }
     Ok(())
+}
+
+fn show_all_devices(dinghy: &Dinghy) -> Result<()> {
+    println!("List of available devices for all platforms:");
+    show_devices(&dinghy, None)
 }
 
 fn show_all_devices_for_platform(dinghy: &Dinghy, platform: Arc<Box<Platform>>) -> Result<()> {
@@ -180,7 +180,10 @@ fn show_devices(dinghy: &Dinghy, platform: Option<Arc<Box<Platform>>>) -> Result
         error!("No matching device found");
         println!("No matching device found");
     } else {
-        for device in devices { println!("{}", device); }
+        for device in devices {
+            let pf:Vec<_> = dinghy.platforms().iter().filter(|pf| pf.is_compatible_with(&**device)).cloned().collect();
+            println!("{}: {:?}", device, pf);
+        }
     }
     Ok(())
 }
